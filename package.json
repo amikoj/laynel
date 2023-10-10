@@ -1,0 +1,48 @@
+{
+  "name": "laynel",
+  "version": "0.0.1",
+  "description": "design a lazy system ",
+  "main": "app.ts",
+  "scripts": {
+    "start": "nodemon --watch **/*.ts --exec \"ts-node\" app.ts",
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/amikoj/laynel.git"
+  },
+  "keywords": [
+    "lazy",
+    "plugins",
+    "nodejs",
+    "admin"
+  ],
+  "author": "amiko",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/amikoj/laynel/issues"
+  },
+  "homepage": "https://github.com/amikoj/laynel#readme",
+  "dependencies": {
+    "dayjs": "^1.11.10",
+    "glob": "^10.3.10",
+    "lodash": "^4.17.21",
+    "log4js": "^6.9.1",
+    "md5": "^2.3.0",
+    "nodemon": "^3.0.1",
+    "reflect-metadata": "^0.1.13",
+    "socket.io": "^4.7.2",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.2.2"
+  },
+  "devDependencies": {
+    "@types/glob": "^8.1.0",
+    "@types/lodash": "^4.14.199",
+    "@types/md5": "^2.3.3",
+    "@types/node": "^20.8.4",
+    "@types/socket.io": "^3.0.2",
+    "@types/validator": "^13.11.2",
+    "mocha": "^10.2.0",
+    "tslint": "^6.1.3"
+  }
+}
