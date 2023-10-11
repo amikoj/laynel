@@ -1,14 +1,12 @@
-import { LayNelServerConfig, startServer } from 'core';
-
-
+import LayNel,{LayNelServerConfig} from './core';
 
 
 function createApp(){
     const config: LayNelServerConfig = {
-        port:3030,
+        port: 3001,
         host:'127.0.0.1'
     }
-    startServer(config)
+   LayNel.run(config) // 启动服务
 }
 
 // 启动服务

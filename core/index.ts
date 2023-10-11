@@ -1,32 +1,19 @@
-import LayNelServer,{Config} from "./typing";
 
-/**
- * 导出types
- */
+import Laynel from './laynel'
+import './typing'
+
+// 别名
 export type LayNelServerConfig = Config
 
-/**
- * 启动服务器
- * @param config 
- */
-export function startServer(config: Config) {
-
-}
 
 
-const LayNelCore = typeof LayNelServer
-
-export const DefalutConfig:Config = {
+export const DefalutConfig:LayNelServerConfig = {
     port:3000,
     host:'localhost',
     enableHttps:false
 }
 
-const LayNel: LayNelServer = {
-    config: DefalutConfig,
-    run: startServer
-}
-
-export default LayNel
-
 export * from './decorator/index'
+
+const instance = new Laynel()  // 构建
+export default instance
