@@ -116,7 +116,7 @@ export default class LayNel extends Config {
         const result = reg.exec(url!);
         if (result) {
           // url 匹配成功
-          route.match = result;
+          route.matched = result;
           route.listener(req, res);
           return true;
         }
@@ -135,12 +135,15 @@ export default class LayNel extends Config {
         data: null,
       };
       res.end(JSON.stringify(result));
+    }else{
+        //test
+        console.log("欢迎使用LayNel 系统服务");
+        res.writeHead(200, { "Content-Type": "text/html;charset=utf8" });
+        // res.writeProcessing()
+        res.end("欢迎使用LayNel 系统服务");
     }
 
-    console.log("欢迎使用LayNel 系统服务");
-    res.writeHead(200, { "Content-Type": "text/html;charset=utf8" });
-    // res.writeProcessing()
-    res.end("欢迎使用LayNel 系统服务");
+
   }
 
   /**

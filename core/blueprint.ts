@@ -40,10 +40,7 @@ class BluePrint extends BluePrintConfig implements Methods {
   onReceive<
     Request extends typeof http.IncomingMessage = typeof http.IncomingMessage,
     Response extends typeof http.ServerResponse = typeof http.ServerResponse
-  >(
-    req: InstanceType<Request>,
-    res: InstanceType<Response> & { req: InstanceType<Request> }
-  ) {
+  >(req: LayNelRecord, res: LayNelRecord) {
     const { url, method } = req;
 
     // 匹配路由
@@ -53,8 +50,8 @@ class BluePrint extends BluePrintConfig implements Methods {
       const result = reg.exec(url!);
       if (result) {
         // url 匹配成功
-        route.match = result;
-        route.listener(req,res)
+        route.matched = result;
+        route.listener(req, res);
         return true;
       }
     });

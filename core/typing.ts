@@ -20,7 +20,7 @@
     interface RouteConfig {
       path:string | RegExp // 正则匹配
       listener: any // 匹配后的回调监听
-      match: Array<any>
+      matched?: Array<any>
     }
   }
 }
