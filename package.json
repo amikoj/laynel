@@ -17,6 +17,10 @@
     "nodejs",
     "admin"
   ],
+  "files": [
+    "core",
+    "utils"
+  ],
   "author": "amiko",
   "license": "ISC",
   "bugs": {
@@ -33,6 +37,7 @@
     "md5": "^2.3.0",
     "nodemon": "^3.0.1",
     "path": "^0.12.7",
+    "path-to-regexp": "^6.2.1",
     "reflect-metadata": "^0.1.13",
     "socket.io": "^4.7.2",
     "ts-node": "^10.9.1",

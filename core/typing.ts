@@ -1,4 +1,4 @@
-declare module "laynel" {
+ declare module "laynel" {
   global {
     /**
      * 配置
@@ -13,5 +13,14 @@ declare module "laynel" {
     type LayNelRecord = {
       [key: string]: any;
     };
+
+    /**
+     * 配置设置路由参数
+     */
+    interface RouteConfig {
+      path:string | RegExp // 正则匹配
+      listener: any // 匹配后的回调监听
+      match: Array<any>
+    }
   }
 }
