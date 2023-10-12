@@ -4,6 +4,8 @@ import { LayNelServerConfig } from "./index";
 import { readFileSync } from "fs";
 import path from "path";
 
+
+
 export class LayNelServer {
   verson: string = "0.0.1";
   server?: Server;
@@ -15,7 +17,7 @@ export class LayNelServer {
    * 构建一个服务器
    * @param config 服务器配置
    * @param listener 进入服务器的回调
-   * @returns 
+   * @returns
    */
   createServer<
     Request extends typeof http.IncomingMessage = typeof http.IncomingMessage,
@@ -23,7 +25,7 @@ export class LayNelServer {
   >(
     config?: LayNelServerConfig,
     listener?: RequestListener<Request, Response>
-  ): Server<Request, Response>{
+  ): Server<Request, Response> {
     if (!config) throw Error("获取配置信息异常");
     const enableHttps = config.enableHttps || false;
 
@@ -38,10 +40,10 @@ export class LayNelServer {
         key: readFileSync(path.join(__dirname, config.key)),
         cert: readFileSync(path.join(__dirname, config.cert)),
       };
-      this.server =  https.createServer(options, listener);
-    }else {
-        //未启动https
-        this.server = http.createServer(listener)
+      this.server = https.createServer(options, listener);
+    } else {
+      //未启动https
+      this.server = http.createServer(listener);
     }
     return this.server;
   }

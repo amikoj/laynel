@@ -16,4 +16,11 @@ export const DefalutConfig:LayNelServerConfig = {
 export * from './decorator/index'
 
 const instance = new Laynel()  // 构建
+
+
+
+
+export * from './blueprint'
+export * from './server'
+export * from './plugins'
 export default instance

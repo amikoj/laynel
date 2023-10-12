@@ -7,6 +7,13 @@ class BluePrintConfig {
   name?: string; // blueprint名称
   staticFolder?: string; // 静态文件位置
   routes: Array<RouteConfig> | undefined;
+
+  /**
+   * 蓝图回调
+   * @param req 
+   * @param res 
+   */
+  public onCreate(req:any,res:any){}
 }
 
 interface Methods {

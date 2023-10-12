@@ -73,13 +73,14 @@ export default class LayNel extends Config {
     Request extends typeof http.IncomingMessage = typeof http.IncomingMessage,
     Response extends typeof ServerResponse = typeof ServerResponse
   >(
+    self: LayNel,
     req: InstanceType<Request>,
     res: InstanceType<Response> & { req: InstanceType<Request> }
   ) {
     // 错误处理
     req.on("error", (err) => {
       console.error(err);
-      this.errorListeners?.forEach((errLi) => {
+      self.errorListeners?.forEach((errLi) => {
         errLi(err, req, res);
       });
       res.statusCode = 400;
@@ -90,7 +91,7 @@ export default class LayNel extends Config {
      * 结束回调
      */
     req.on("end", () => {
-      this.onCompleteListeners?.forEach((li) => li());
+      self.onCompleteListeners?.forEach((li) => li());
     });
 
     const { url, method } = req;
@@ -98,7 +99,7 @@ export default class LayNel extends Config {
     /**
      * 匹配处理路由
      */
-    const currentBlueprint = this.blueprints?.find((item) => {
+    const currentBlueprint = self.blueprints?.find((item) => {
       const isMatch = url?.startsWith(item.blueprint.prefix!);
       if (isMatch) {
         if (item.listener) item.listener(req, res);
@@ -106,27 +107,33 @@ export default class LayNel extends Config {
       }
       return isMatch; // 匹配后结束
     });
+    // console.log('get currentBlueprint:',currentBlueprint,this.routes)
 
     if (!currentBlueprint) {
-      this.matchBlueprint = undefined;
+      self.matchBlueprint = undefined;
       // 蓝图不匹配，查找配置路由
-      this.matchRoute = this.routes?.find((route) => {
+      self.matchRoute = self.routes?.find((route) => {
         const { path, listener } = route;
         const reg = pathToRegexp(path);
         const result = reg.exec(url!);
-        if (result) {
-          // url 匹配成功
-          route.matched = result;
-          route.listener(req, res);
-          return true;
+        // console.log("get result:", result);
+        try {
+          if (result) {
+            // url 匹配成功
+            route.matched = result;
+            listener(req, res);
+            return true;
+          }
+        } catch (e) {
+          console.error("get exception:", e);
         }
       });
     } else {
-      this.matchBlueprint = currentBlueprint.blueprint;
-      this.matchRoute = currentBlueprint.blueprint.matchRoute;
+      self.matchBlueprint = currentBlueprint.blueprint;
+      self.matchRoute = currentBlueprint.blueprint.matchRoute;
     }
 
-    if (!this.matchRoute) {
+    if (!self.matchRoute) {
       res.appendHeader("Content-Type", "application/json");
       res.statusCode = 404;
       const result = {
@@ -135,15 +142,13 @@ export default class LayNel extends Config {
         data: null,
       };
       res.end(JSON.stringify(result));
-    }else{
-        //test
-        console.log("欢迎使用LayNel 系统服务");
-        res.writeHead(200, { "Content-Type": "text/html;charset=utf8" });
-        // res.writeProcessing()
-        res.end("欢迎使用LayNel 系统服务");
+    } else {
+      //test
+      console.log("欢迎使用LayNel 系统服务");
+      res.writeHead(200, { "Content-Type": "text/html;charset=utf8" });
+      // res.writeProcessing()
+      res.end("欢迎使用LayNel 系统服务");
     }
-
-
   }
 
   /**
@@ -157,8 +162,11 @@ export default class LayNel extends Config {
       return;
     }
     const { port, host } = this.config;
+    let self = this;
 
-    this.server = server.createServer(config, this.onCreate); // 创建服务器
+    this.server = server.createServer(config, (req, res) =>
+      this.onCreate(self, req, res)
+    ); // 创建服务器
     this.server?.listen(port, host, () => {
       this.log.info("服务启动成功！");
       console.log(`服务器访问地址：http://${host}:${port}`);
@@ -172,6 +180,7 @@ export default class LayNel extends Config {
    */
   public addRoute(path: string | RegExp, listener: RequestListener) {
     this.routes?.push({ path, listener }); // 添加路由，匹配成功的第一个回调
+    console.log("addRoute:", this.routes);
   }
 
   /**
