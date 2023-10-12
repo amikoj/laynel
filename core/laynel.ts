@@ -103,7 +103,9 @@ export default class LayNel extends Config {
       const isMatch = url?.startsWith(item.blueprint.prefix!);
       if (isMatch) {
         if (item.listener) item.listener(req, res);
-        item.blueprint.onReceive(req, res);
+
+        item.blueprint.onReceive.bind(item.blueprint,req,res)()
+        // item.blueprint.onReceive(req, res);
       }
       return isMatch; // 匹配后结束
     });
@@ -147,7 +149,7 @@ export default class LayNel extends Config {
       console.log("欢迎使用LayNel 系统服务");
       res.writeHead(200, { "Content-Type": "text/html;charset=utf8" });
       // res.writeProcessing()
-      res.end("欢迎使用LayNel 系统服务");
+      // res.end("欢迎使用LayNel 系统服务");
     }
   }
 

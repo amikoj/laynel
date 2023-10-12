@@ -23,7 +23,7 @@ interface Methods {
    * @param listener 监听返回
    * @returns 无
    */
-  addRoute: (path: RegExp | string, listener?: RequestListener) => void;
+  addRoute: (path: RegExp | string, listener: RequestListener) => void;
   /**
    * 访问路径匹配后调用
    * @param req
@@ -52,7 +52,7 @@ class BluePrint extends BluePrintConfig implements Methods {
 
     // 匹配路由
     this.matchRoute = this.routes?.find((route) => {
-      const { path, listener } = route;
+      const { path } = route;
       const reg = pathToRegexp(path);
       const result = reg.exec(url!);
       if (result) {
@@ -71,9 +71,10 @@ class BluePrint extends BluePrintConfig implements Methods {
    */
   public addRoute(
     path: RegExp | string,
-    listener?: RequestListener | undefined
+    listener: RequestListener
   ) {
     // 添加路由
+    this.routes?.push({path, listener})
   }
 }
 

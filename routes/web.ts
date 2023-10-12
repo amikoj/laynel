@@ -1,4 +1,4 @@
-import BluePrint from "~/core/blueprint";
+import BluePrint from "../core/blueprint";
 
 class WebBlueprint extends BluePrint {
 

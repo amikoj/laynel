@@ -1,7 +1,7 @@
-import laynel, { LayNelServerConfig } from "~/core";
-import blueprints from './routes'
-import LayNel from "~/core/laynel";
-import BluePrint  from "~/core/blueprint";
+import laynel, { LayNelServerConfig } from "./core/index";
+import blueprints from './routes/index'
+import LayNel from "./core/laynel";
+import BluePrint  from "./core/blueprint";
 
 laynel.addRoute("/", (req, res) => {
     const a  = {
