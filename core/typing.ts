@@ -19,7 +19,7 @@ declare module "laynel" {
      */
     interface RouteConfig {
       path: string | RegExp; // 正则匹配
-      listener: ((req: any, res: any) => void); // 匹配后的回调监听
+      listener: ((req: any, res: any) => any); // 匹配后的回调监听
       matched?: Array<any>;
     }
 

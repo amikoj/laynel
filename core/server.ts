@@ -3,6 +3,8 @@ import http, { RequestListener, Server } from "http";
 import { LayNelServerConfig } from "./index";
 import { readFileSync } from "fs";
 import path from "path";
+import qs from 'querystring' 
+import URL from 'url'
 
 // response 类型
 export type ResponseType<T extends typeof http.IncomingMessage = typeof http.IncomingMessage,
@@ -14,14 +16,15 @@ export type RequestType<T extends typeof http.IncomingMessage = typeof http.Inco
 
 
 
-
-class Base < T extends typeof http.IncomingMessage = typeof http.IncomingMessage,
+abstract class Base < T extends typeof http.IncomingMessage = typeof http.IncomingMessage,
 E extends typeof http.ServerResponse = typeof http.ServerResponse>{
   url: string | undefined; // 访问url
+  method: string | undefined
   headers?: Record<string, any>;
+  body: any; // body row data
   data: any; // body data
   formData: Record<string, any> | undefined; // form-data请求数据
-  query: { path: string; params: Record<string, any>; } | undefined;
+  query: { path: any; params: Record<string, any>; } | undefined;
   error?:any  // 错误信息
   request?:RequestType<T>   // 添加了请求的请求引用
   response?:ResponseType<T,E>  // 添加了响应的引用
@@ -30,15 +33,51 @@ E extends typeof http.ServerResponse = typeof http.ServerResponse>{
     // 初始化构造
     this.request = req
     this.response =res
+    this.parseData()
+   
   }
+
+ abstract parseData():void
 }
 
 /**
  * 请求信息封装
  */
-export class Request extends Base{
+export class Request< T extends typeof http.IncomingMessage = typeof http.IncomingMessage,
+E extends typeof http.ServerResponse = typeof http.ServerResponse> extends Base{
 
 
+  constructor(req:RequestType<T>,res?:ResponseType<T,E>) {
+    super(req,res)
+  }
+
+
+   parseData(){
+
+    const  { headers, url, method} = this.request!
+    this.url = url
+    this.headers = headers
+    this.method = method
+    const { pathname,query } = URL.parse(url!)
+    this.query = {
+      path:pathname,
+      params:qs.parse(query)
+    }
+    let data = '';
+    this.request?.on('data', (chunk) =>{
+      data += chunk;
+    })
+
+    this.request?.on('end', () => {
+      try{
+        this.body = data
+        this.data = JSON.parse(data);
+      }catch(e){
+        console.log('设置请求信息')
+      }
+    });
+
+  }
 
 }
 
@@ -54,6 +93,17 @@ E extends typeof http.ServerResponse = typeof http.ServerResponse> extends Base{
 
   }
 
+
+  parseData(): void {
+    const  res = this.response!
+   // 跨域允许携带凭据（cookie之类）
+   res.setHeader('Access-Control-Allow-Credentials', 'true');
+   // 要允许跨域携带cookie，必须设置为具体的域，不能是‘*'
+   res.setHeader('Access-Control-Allow-Origin', '*');
+   res.setHeader('Content-Type', 'application/json;utf-8');
+   res.setHeader('Access-Control-Allow-Headers',"Token, X-Custom-Header,Authorization")
+   res.setHeader("Access-Control-Allow-Methods", "*");
+  }
   /**
    * 添加Header头信息
    * @param name 

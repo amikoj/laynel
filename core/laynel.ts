@@ -72,7 +72,7 @@ export default class LayNel<
 
   private onMessage(self: LayNel,req: RequestType<T>, res: ResponseType<T,E>) {
     const request: Request = new Request(req); // 构建Request和Response
-    const respose: Response = new Response(req,res)
+    const respose: Response = new Response(res)
     // 错误处理
     req.on("error", (err) => {self
       console.error(err);
@@ -80,20 +80,15 @@ export default class LayNel<
         errLi(err, req, res);
       });
       res.statusCode = 400;
-      res.end();
     });
-
-    
-    
-
     /**
      * 结束回调
      */
-    req.on("end", () => {
+    res.on("end", () => {
       self.onCompleteListeners?.forEach((li) => li());
     });
 
-    const { url, method } = req;
+    const { url } = req;
 
     /**
      * 匹配处理路由
@@ -109,11 +104,12 @@ export default class LayNel<
       return isMatch; // 匹配后结束
     });
     // console.log('get currentBlueprint:',currentBlueprint,this.routes)
+    let matchRoute;
 
     if (!currentBlueprint) {
       self.matchBlueprint = undefined;
       // 蓝图不匹配，查找配置路由
-      self.matchRoute = self.routes?.find((route) => {
+      matchRoute = self.routes?.find((route) => {
         const { path, listener } = route;
         const reg = pathToRegexp(path);
         const result = reg.exec(url!);
@@ -122,7 +118,7 @@ export default class LayNel<
           if (result) {
             // url 匹配成功
             route.matched = result;
-            listener(req, res);
+            // listener(req, res);
             return true;
           }
         } catch (e) {
@@ -131,11 +127,10 @@ export default class LayNel<
       });
     } else {
       self.matchBlueprint = currentBlueprint.blueprint;
-      self.matchRoute = currentBlueprint.blueprint.matchRoute;
+      matchRoute = currentBlueprint.blueprint.matchRoute;
     }
 
-    if (!self.matchRoute) {
-      res.appendHeader("Content-Type", "application/json");
+    if (!matchRoute) {
       res.statusCode = 404;
       const result = {
         code: 404,
@@ -144,11 +139,8 @@ export default class LayNel<
       };
       res.end(JSON.stringify(result));
     } else {
-      //test
-      console.log("欢迎使用LayNel 系统服务");
-      res.writeHead(200, { "Content-Type": "text/html;charset=utf8" });
-      // res.writeProcessing()
-      // res.end("欢迎使用LayNel 系统服务");
+      const result =  matchRoute.listener(request,respose)
+     res.end(result)
     }
   }
 
