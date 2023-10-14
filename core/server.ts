@@ -4,8 +4,74 @@ import { LayNelServerConfig } from "./index";
 import { readFileSync } from "fs";
 import path from "path";
 
+// response 类型
+export type ResponseType<T extends typeof http.IncomingMessage = typeof http.IncomingMessage,
+E extends typeof http.ServerResponse = typeof http.ServerResponse> = InstanceType<E> & { req: InstanceType<T> }
 
 
+// resquest 类型
+export type RequestType<T extends typeof http.IncomingMessage = typeof http.IncomingMessage> = InstanceType<T>
+
+
+
+
+class Base < T extends typeof http.IncomingMessage = typeof http.IncomingMessage,
+E extends typeof http.ServerResponse = typeof http.ServerResponse>{
+  url: string | undefined; // 访问url
+  headers?: Record<string, any>;
+  data: any; // body data
+  formData: Record<string, any> | undefined; // form-data请求数据
+  query: { path: string; params: Record<string, any>; } | undefined;
+  error?:any  // 错误信息
+  request?:RequestType<T>   // 添加了请求的请求引用
+  response?:ResponseType<T,E>  // 添加了响应的引用
+
+  constructor(req:RequestType<T>,res?:ResponseType<T,E>){
+    // 初始化构造
+    this.request = req
+    this.response =res
+  }
+}
+
+/**
+ * 请求信息封装
+ */
+export class Request extends Base{
+
+
+
+}
+
+
+/**
+ * 封装返回参数，关闭一些操作口，防止误操作
+ */
+export class Response < T extends typeof http.IncomingMessage = typeof http.IncomingMessage,
+E extends typeof http.ServerResponse = typeof http.ServerResponse> extends Base{
+  
+  constructor(res: ResponseType<T,E>) {
+    super(res!.req,res);
+
+  }
+
+  /**
+   * 添加Header头信息
+   * @param name 
+   * @param value 
+   */
+  public appendHeader(name: string, value: string | readonly string[]){
+    this.response?.appendHeader(name,value)
+    return this
+  }
+
+  public setHeader(name: string, value: string | number | readonly string[]) {
+    this.response?.setHeader(name,value)
+    return this
+  }
+
+}
+
+ 
 export class LayNelServer {
   verson: string = "0.0.1";
   server?: Server;
@@ -20,12 +86,12 @@ export class LayNelServer {
    * @returns
    */
   createServer<
-    Request extends typeof http.IncomingMessage = typeof http.IncomingMessage,
-    Response extends typeof http.ServerResponse = typeof http.ServerResponse
+    T extends typeof http.IncomingMessage = typeof http.IncomingMessage,
+    E extends typeof http.ServerResponse = typeof http.ServerResponse
   >(
     config?: LayNelServerConfig,
-    listener?: RequestListener<Request, Response>
-  ): Server<Request, Response> {
+    listener?: RequestListener<T, E>
+  ): Server<T, E> {
     if (!config) throw Error("获取配置信息异常");
     const enableHttps = config.enableHttps || false;
 

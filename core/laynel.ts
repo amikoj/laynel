@@ -1,8 +1,6 @@
 import { DefalutConfig, LayNelServerConfig } from "./index";
-import server, { LayNelServer } from "./server";
-import http, { RequestListener, Server, ServerResponse } from "http";
-import Color from "colors";
-import Logger from "log4js";
+import server, {  Request,Response,type RequestType,type ResponseType } from "./server";
+import http, { IncomingMessage, RequestListener, Server, ServerResponse } from "http";
 import BluePrint from "./blueprint";
 import { pathToRegexp } from "path-to-regexp";
 
@@ -34,7 +32,10 @@ class Config {
 /**
  * LayNel操作类
  */
-export default class LayNel extends Config {
+export default class LayNel<
+  T extends typeof http.IncomingMessage = typeof http.IncomingMessage,
+  E extends typeof http.ServerResponse = typeof http.ServerResponse
+> extends Config {
   matchRoute: RouteConfig | undefined;
   matchBlueprint: BluePrint | undefined;
 
@@ -69,16 +70,11 @@ export default class LayNel extends Config {
     }
   }
 
-  private onCreate<
-    Request extends typeof http.IncomingMessage = typeof http.IncomingMessage,
-    Response extends typeof ServerResponse = typeof ServerResponse
-  >(
-    self: LayNel,
-    req: InstanceType<Request>,
-    res: InstanceType<Response> & { req: InstanceType<Request> }
-  ) {
+  private onMessage(self: LayNel,req: RequestType<T>, res: ResponseType<T,E>) {
+    const request: Request = new Request(req); // 构建Request和Response
+    const respose: Response = new Response(req,res)
     // 错误处理
-    req.on("error", (err) => {
+    req.on("error", (err) => {self
       console.error(err);
       self.errorListeners?.forEach((errLi) => {
         errLi(err, req, res);
@@ -86,6 +82,9 @@ export default class LayNel extends Config {
       res.statusCode = 400;
       res.end();
     });
+
+    
+    
 
     /**
      * 结束回调
@@ -104,7 +103,7 @@ export default class LayNel extends Config {
       if (isMatch) {
         if (item.listener) item.listener(req, res);
 
-        item.blueprint.onReceive.bind(item.blueprint,req,res)()
+        item.blueprint.onReceive.bind(item.blueprint, req, res)();
         // item.blueprint.onReceive(req, res);
       }
       return isMatch; // 匹配后结束
@@ -160,14 +159,14 @@ export default class LayNel extends Config {
     if (config) this.config = config;
     this.log.info("准备启动服务器");
     if (!this.config) {
-      console.log("请先配置监听端口和主机".red);
+      console.log("请先配置监听端口和主机");
       return;
     }
     const { port, host } = this.config;
     let self = this;
 
-    this.server = server.createServer(config, (req, res) =>
-      this.onCreate(self, req, res)
+    this.server = server.createServer(config,(req: any, res: any) =>
+      this.onMessage(self, req, res)
     ); // 创建服务器
     this.server?.listen(port, host, () => {
       this.log.info("服务启动成功！");
