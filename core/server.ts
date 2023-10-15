@@ -5,6 +5,7 @@ import { readFileSync } from "fs";
 import path from "path";
 import qs from 'querystring' 
 import URL from 'url'
+import { INTERNAL_RES_HEADERS } from "./utils";
 
 // response 类型
 export type ResponseType<T extends typeof http.IncomingMessage = typeof http.IncomingMessage,
@@ -53,7 +54,6 @@ E extends typeof http.ServerResponse = typeof http.ServerResponse> extends Base{
 
 
    parseData(){
-
     const  { headers, url, method} = this.request!
     this.url = url
     this.headers = headers
@@ -61,21 +61,19 @@ E extends typeof http.ServerResponse = typeof http.ServerResponse> extends Base{
     const { pathname,query } = URL.parse(url!)
     this.query = {
       path:pathname,
-      params:qs.parse(query)
+      params:query?qs.parse(query):{}
     }
     let data = '';
     this.request?.on('data', (chunk) =>{
       data += chunk;
-    })
-
-    this.request?.on('end', () => {
+      console.log('内层处理请求获取获取事件')
       try{
         this.body = data
         this.data = JSON.parse(data);
       }catch(e){
         console.log('设置请求信息')
       }
-    });
+    })
 
   }
 
@@ -90,19 +88,16 @@ E extends typeof http.ServerResponse = typeof http.ServerResponse> extends Base{
   
   constructor(res: ResponseType<T,E>) {
     super(res!.req,res);
-
   }
 
 
   parseData(): void {
     const  res = this.response!
    // 跨域允许携带凭据（cookie之类）
-   res.setHeader('Access-Control-Allow-Credentials', 'true');
-   // 要允许跨域携带cookie，必须设置为具体的域，不能是‘*'
-   res.setHeader('Access-Control-Allow-Origin', '*');
-   res.setHeader('Content-Type', 'application/json;utf-8');
-   res.setHeader('Access-Control-Allow-Headers',"Token, X-Custom-Header,Authorization")
-   res.setHeader("Access-Control-Allow-Methods", "*");
+   const keys = Object.keys(INTERNAL_RES_HEADERS);
+   keys.forEach(key =>{
+    res.setHeader(key,INTERNAL_RES_HEADERS[key])
+   })
   }
   /**
    * 添加Header头信息

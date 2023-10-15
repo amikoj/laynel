@@ -1,16 +1,35 @@
 import { DefalutConfig, LayNelServerConfig } from "./index";
-import server, {  Request,Response,type RequestType,type ResponseType } from "./server";
-import http, { IncomingMessage, RequestListener, Server, ServerResponse } from "http";
+import server, {
+  Request,
+  Response,
+  type RequestType,
+  type ResponseType,
+} from "./server";
+import http, {
+  IncomingMessage,
+  RequestListener,
+  Server,
+  ServerResponse,
+} from "http";
 import BluePrint from "./blueprint";
 import { pathToRegexp } from "path-to-regexp";
+import { NetErrorCode, RenderTypes } from "./enums/NetWork";
+
+
+
+export interface RenderBody {
+  type: RenderTypes,
+  result?:any
+}
+
 
 export type ErrorListener<
-  Request extends typeof http.IncomingMessage = typeof http.IncomingMessage,
-  Response extends typeof ServerResponse = typeof ServerResponse
+  T extends typeof http.IncomingMessage = typeof http.IncomingMessage,
+  E extends typeof ServerResponse = typeof ServerResponse
 > = (
   err: Error,
-  req: InstanceType<Request>,
-  res: InstanceType<Response> & { req: InstanceType<Request> }
+  req: InstanceType<T>,
+  res: InstanceType<E> & { req: InstanceType<T> }
 ) => void; // 错误回调
 export type OnCompleteListener = () => void; // 请求结束回到
 
@@ -29,6 +48,8 @@ class Config {
   routes: Array<RouteConfig> | undefined; // 路由集合
 }
 
+ type Middleware = (req:Request,res:Response,next:Function) => void
+
 /**
  * LayNel操作类
  */
@@ -38,6 +59,7 @@ export default class LayNel<
 > extends Config {
   matchRoute: RouteConfig | undefined;
   matchBlueprint: BluePrint | undefined;
+  middlewares: Array<Middleware>  = []
 
   constructor(config?: LayNelServerConfig) {
     super();
@@ -70,11 +92,30 @@ export default class LayNel<
     }
   }
 
-  private onMessage(self: LayNel,req: RequestType<T>, res: ResponseType<T,E>) {
+
+  private loadMiddlewares(m: Middleware[],req:Request,res:Response){
+    const midd = [...m]
+    function load(req:Request,res:Response){
+      const next = () =>{
+        const middleware = midd.shift()
+        if(middleware){
+          middleware(req, res,next)
+        }
+      }
+    }
+    load(req,res)
+  }
+
+  private onMessage(
+    self: LayNel,
+    req: RequestType<T>,
+    res: ResponseType<T, E>
+  ) {
     const request: Request = new Request(req); // 构建Request和Response
-    const respose: Response = new Response(res)
+    const respose: Response = new Response(res);
     // 错误处理
-    req.on("error", (err) => {self
+    req.on("error", (err) => {
+      self;
       console.error(err);
       self.errorListeners?.forEach((errLi) => {
         errLi(err, req, res);
@@ -104,7 +145,7 @@ export default class LayNel<
       return isMatch; // 匹配后结束
     });
     // console.log('get currentBlueprint:',currentBlueprint,this.routes)
-    let matchRoute;
+    let matchRoute:any = null;
 
     if (!currentBlueprint) {
       self.matchBlueprint = undefined;
@@ -130,18 +171,48 @@ export default class LayNel<
       matchRoute = currentBlueprint.blueprint.matchRoute;
     }
 
-    if (!matchRoute) {
-      res.statusCode = 404;
-      const result = {
-        code: 404,
-        msg: "未找到匹配的访问路径",
-        data: null,
-      };
-      res.end(JSON.stringify(result));
-    } else {
-      const result =  matchRoute.listener(request,respose)
-     res.end(result)
-    }
+    req.on("end", () => {
+      if (!matchRoute) {
+        // 404 not fond
+        res.statusCode = NetErrorCode.NOT_FOND;
+        const result = {
+          code: 404,
+          msg: "未找到匹配的访问路径",
+          data: null,
+        };
+        res.end(JSON.stringify(result));
+      } else {
+        const _result:RenderBody = matchRoute.listener(request, respose); // 返回数据
+        const {type,result } =  _result
+        switch(type){
+          case RenderTypes.JSON:
+            res.setHeader("Content-Type", "application/json; charset=utf-8")
+            break;
+          case RenderTypes.RAW:
+            res.setHeader('Content-Type','text/plain')
+            break;
+          case RenderTypes.HTML:
+            res.setHeader('Content-Type','text/html')
+            break;
+          case RenderTypes.STATIC:
+            // 静态文件
+            break;
+          default: 
+            //支持中间件
+            self.loadMiddlewares(self.middlewares,request,respose)
+            break;
+        }
+        res.end(result);
+      }
+    });
+  }
+
+
+  /**
+   * 添加中间件
+   */
+  public addMiddlewares(middleware:Middleware){
+    this.middlewares.push(middleware)
   }
 
   /**
@@ -157,7 +228,7 @@ export default class LayNel<
     const { port, host } = this.config;
     let self = this;
 
-    this.server = server.createServer(config,(req: any, res: any) =>
+    this.server = server.createServer(config, (req: any, res: any) =>
       this.onMessage(self, req, res)
     ); // 创建服务器
     this.server?.listen(port, host, () => {
