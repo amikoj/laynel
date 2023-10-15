@@ -4,11 +4,10 @@ import LayNel from "./core/laynel";
 import BluePrint  from "./core/blueprint";
 
 laynel.addRoute("/", (req, res) => {
-    const a  = {
-        code:200,
-        msg:'访问成功'
-    }
-    res.end(JSON.stringify(a))
+    return {
+      code:200,
+      msg:'访问成功'
+  }
 });
 
 

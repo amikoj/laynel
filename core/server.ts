@@ -5,17 +5,7 @@ import { readFileSync } from "fs";
 import path from "path";
 import qs from 'querystring' 
 import URL from 'url'
-import { INTERNAL_RES_HEADERS } from "./utils";
-
-// response 类型
-export type ResponseType<T extends typeof http.IncomingMessage = typeof http.IncomingMessage,
-E extends typeof http.ServerResponse = typeof http.ServerResponse> = InstanceType<E> & { req: InstanceType<T> }
-
-
-// resquest 类型
-export type RequestType<T extends typeof http.IncomingMessage = typeof http.IncomingMessage> = InstanceType<T>
-
-
+import { INTERNAL_RES_HEADERS, RequestType, ResponseType } from "./utils";
 
 abstract class Base < T extends typeof http.IncomingMessage = typeof http.IncomingMessage,
 E extends typeof http.ServerResponse = typeof http.ServerResponse>{
@@ -35,7 +25,6 @@ E extends typeof http.ServerResponse = typeof http.ServerResponse>{
     this.request = req
     this.response =res
     this.parseData()
-   
   }
 
  abstract parseData():void

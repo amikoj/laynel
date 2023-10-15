@@ -1,5 +1,7 @@
-import http, { RequestListener } from "http";
+import http from "http";
 import { pathToRegexp } from "path-to-regexp";
+import { Request, Response } from "./server";
+import type {   RequestType, ResponseType, RequestListener} from './utils'
 
 class BluePrintConfig {
   prefix?: string; // path路径
@@ -15,6 +17,8 @@ class BluePrintConfig {
    */
   public onCreate(req:any,res:any){}
 }
+
+
 
 interface Methods {
   /**
@@ -71,8 +75,7 @@ class BluePrint extends BluePrintConfig implements Methods {
    */
   public addRoute(
     path: RegExp | string,
-    listener: RequestListener
-  ) {
+    listener: RequestListener) {
     // 添加路由
     this.routes?.push({path, listener})
   }

@@ -13,3 +13,7 @@ export enum RenderTypes {
     STATIC = 'static', // 返回静态资源
 
 }
+
+export enum NetRenderContent{
+    NOT_FOND = '页面不存在'
+}

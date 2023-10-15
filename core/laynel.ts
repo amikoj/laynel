@@ -2,8 +2,6 @@ import { DefalutConfig, LayNelServerConfig } from "./index";
 import server, {
   Request,
   Response,
-  type RequestType,
-  type ResponseType,
 } from "./server";
 import http, {
   IncomingMessage,
@@ -14,12 +12,17 @@ import http, {
 import BluePrint from "./blueprint";
 import { pathToRegexp } from "path-to-regexp";
 import { NetErrorCode, RenderTypes } from "./enums/NetWork";
+import type {   RequestType, ResponseType,} from './utils'
 
 
 
 export interface RenderBody {
   type: RenderTypes,
-  result?:any
+  result?:any,
+  error?: {
+    code: number;
+    msg: string;
+  }
 }
 
 
@@ -172,8 +175,9 @@ export default class LayNel<
     }
 
     req.on("end", () => {
-      if (!matchRoute) {
+      if (!matchRoute ) {
         // 404 not fond
+        res.setHeader("Content-Type", "application/json; charset=utf-8")
         res.statusCode = NetErrorCode.NOT_FOND;
         const result = {
           code: 404,
@@ -183,6 +187,19 @@ export default class LayNel<
         res.end(JSON.stringify(result));
       } else {
         const _result:RenderBody = matchRoute.listener(request, respose); // 返回数据
+
+        if(_result.error) {
+          // 存在错误信息
+          res.setHeader("Content-Type", "application/json; charset=utf-8")
+          res.statusCode = NetErrorCode.NOT_FOND;
+          const result = {
+            code: _result.error.code,
+            msg: _result.error.msg,
+            data: _result.result,
+          };
+          res.end(JSON.stringify(result));
+          return
+        }
         const {type,result } =  _result
         switch(type){
           case RenderTypes.JSON:
